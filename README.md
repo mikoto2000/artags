@@ -17,7 +17,7 @@ Requirements:
 - java version "1.8.0_112" or later.
 
 
-Ueature :
+Feature :
 ---------
 
 - [ ] : 参照先(<XXX-REF> タグで指定されたエレメント) にジャンプするための tags ファイルを生成する
