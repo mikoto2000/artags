@@ -68,31 +68,22 @@ public class Main {
             System.exit(0);
         }
 
-        ArrayList<Path> arxmls = new ArrayList<>();
-        Files.walkFileTree(Paths.get(options.getTargetDirectories().get(0)),
-            new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(
-                        Path file,
-                        BasicFileAttributes attr) throws IOException {
+        // 指定されたディレクトリ以下の arxml ファイル一覧を取得する
+        List<Arxml> arxmls = findArxmls(options.getTargetDirectories());
 
-                    // arxml ファイルであれば、リストに追加する
-                    if (file.toString().endsWith("arxml")) {
-                        arxmls.add(file);
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
-            });
 
         // 主処理
-        // arxml リストを一つずつ読み込み、タグファイルを作成する。
-        // TODO: xml ファイルをまたいだ参照も存在するのでそこを達成すること。
-        for (Path arxml : arxmls) {
-            Set<Record> tags = createTagsString(arxml.toString());
+        // arxml リストを一つずつ読み込み、タグファイルのレコードを作成する。
+        Set<Record> allRecords = new HashSet<Record>();
+        for (Arxml arxml : arxmls) {
+            Set<Record> tags = createTagsString(arxml, arxmls);
+            allRecords.addAll(tags);
+        }
 
-            for (Record r : tags) {
-                System.out.println(r);
-            }
+        // タグレコードを出力
+        // TODO: ファイル出力する
+        for (Record record : allRecords) {
+            System.out.println(record);
         }
     }
 
@@ -105,13 +96,97 @@ public class Main {
         optionParser.printUsage(System.out);
     }
 
-    public static Set<Record> createTagsString(String filePath)
+    public static Set<Record> createTagsString(
+            Arxml referredArxml,
+            List<Arxml> avarableArxmls)
             throws SAXException,
                     XPathExpressionException,
                     TransformerException,
                     ParserConfigurationException,
                     IOException {
-        Document doc = createDocument(filePath);
+
+        XPathFactory xpathfactory = XPathFactory.newInstance();
+        XPath xpath = xpathfactory.newXPath();
+
+        // 参照しているノードのリストを取得する
+        List<Node> refNodes = searchRefNodes(referredArxml);
+
+        // avarableArxmls から、 refNode の実体を探す
+        HashSet<Record> tags = new HashSet<>();
+        for (Node n : refNodes) {
+            String arHierarchyPath = n.getTextContent();
+            String[] arHierarchyArray = arHierarchyPath.split("/");
+            String symbol = arHierarchyArray[arHierarchyArray.length - 1];
+
+            // 実体を探すための XPath 式を組み立てる
+            String entitySearchXPath = buildEntitySearchXPath(arHierarchyPath);
+
+            // 全 arxml に対して直前で組み立てた XPath 式を使って実体を取得
+            for (Arxml arxml : avarableArxmls) {
+                NodeList targetNodeList = (NodeList)xpath.evaluate(
+                        entitySearchXPath,
+                        arxml.getElement(),
+                        XPathConstants.NODESET);
+
+                // 実体が見つかったら返却用 Set に詰め込む
+                int targetNodeSize = targetNodeList.getLength();
+                for (int i = 0; i < targetNodeSize; i++) {
+                    tags.add(new Record(
+                            symbol,
+                            arxml.getFilePath(),
+                            convertDomToString(targetNodeList.item(i), symbol),
+                            targetNodeList.item(i).getNodeName(),
+                            arHierarchyPath));
+                }
+            }
+        }
+
+        return tags;
+    }
+
+    private static List<Arxml> findArxmls(List<String> baseDirectories)
+            throws IOException {
+
+        // 指定されたディレクトリ以下の arxml ファイルを抽出し、 arxmls に格納
+        List<Arxml> arxmls = new ArrayList<>();
+        for (String baseDirectory : baseDirectories) {
+
+            // 今回のループで指定されたディレクトリ以下の arxml ファイルを抽出
+            Files.walkFileTree(Paths.get(baseDirectory),
+                new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(
+                            Path file,
+                            BasicFileAttributes attr) throws IOException {
+
+                        // arxml ファイルであれば、リストに追加する
+                        if (file.toString().endsWith("arxml")) {
+                            try {
+                                arxmls.add(new Arxml(file.toString(), createDocument(file)));
+                            } catch (SAXException|ParserConfigurationException e) {
+                                // TODO: エラー処理をまじめに考える
+                                System.err.println(e);
+                            }
+                        }
+
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+        }
+
+        return arxmls;
+    }
+
+    private static Document createDocument(Path filePath)
+            throws SAXException,
+                    ParserConfigurationException,
+                    IOException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(filePath.toString());
+    }
+
+    private static List<Node> searchRefNodes(Arxml arxml) throws XPathExpressionException {
 
         XPathFactory xpathfactory = XPathFactory.newInstance();
         XPath xpath = xpathfactory.newXPath();
@@ -119,62 +194,34 @@ public class Main {
         // get reference node list
         NodeList refNodeList = (NodeList)xpath.evaluate(
                 "//*[@DEST]",
-                doc,
+                arxml.getElement(),
                 XPathConstants.NODESET);
 
+        // move NodeList to ArrayList<Node>.
         int refNodeListSize = refNodeList.getLength();
         ArrayList<Node> refNodes = new ArrayList<>(refNodeListSize);
         for (int i = 0; i < refNodeListSize; i++) {
             refNodes.add(refNodeList.item(i));
         }
 
-        // get node entity of refNodes.
-        HashSet<Record> tags = new HashSet<>();
-        for (Node n : refNodes) {
-            String arHierarchyPath = n.getTextContent();
-
-            // build xpath.
-            List<String> splitedArHierarchyPath = Arrays.asList(arHierarchyPath.split("/"));
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("//SHORT-NAME[text()=\"");
-
-            int depth = splitedArHierarchyPath.size();
-            for (int i = 1; i < depth - 1; i++) {
-                sb.append(splitedArHierarchyPath.get(i));
-                sb.append("\"]/..//SHORT-NAME[text()=\"");
-            }
-            sb.append(splitedArHierarchyPath.get(depth - 1));
-            sb.append("\"]/..");
-
-            // search node, use xpath.
-            NodeList targetNodeList = (NodeList)xpath.evaluate(
-                    sb.toString(),
-                    doc,
-                    XPathConstants.NODESET);
-
-            int targetNodeSize = targetNodeList.getLength();
-            for (int i = 0; i < targetNodeSize; i++) {
-                String symbol = splitedArHierarchyPath.get(depth - 1);
-                tags.add(new Record(
-                        symbol,
-                        filePath,
-                        convertDomToString(targetNodeList.item(i), symbol),
-                        targetNodeList.item(i).getNodeName(),
-                        arHierarchyPath));
-            }
-        }
-
-        return tags;
+        return refNodes;
     }
 
-    private static Document createDocument(String filePath)
-            throws SAXException,
-                    ParserConfigurationException,
-                    IOException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse(filePath);
+    private static String buildEntitySearchXPath(String arHierarchyPath) {
+        List<String> splitedArHierarchyPath = Arrays.asList(arHierarchyPath.split("/"));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("//SHORT-NAME[text()=\"");
+
+        int depth = splitedArHierarchyPath.size();
+        for (int i = 1; i < depth - 1; i++) {
+            sb.append(splitedArHierarchyPath.get(i));
+            sb.append("\"]/..//SHORT-NAME[text()=\"");
+        }
+        sb.append(splitedArHierarchyPath.get(depth - 1));
+        sb.append("\"]/..");
+
+        return sb.toString();
     }
 
     private static String convertDomToString(Node node, String symbol) throws TransformerException {
@@ -202,6 +249,13 @@ public class Main {
         xmlString = xmlString.substring(xmlString.indexOf(symbol), xmlString.length());
 
         return "/" + xmlString + "/";
+    }
+
+    @AllArgsConstructor
+    @Data
+    static class Arxml {
+        private String filePath;
+        private Document element;
     }
 
     // SYMBO\\t.\\PATH\\TO\\FILE\\tSEARCH_STR/;"\\tTYPE\\tAR_HIERARCHY_PATH\\tfile:
