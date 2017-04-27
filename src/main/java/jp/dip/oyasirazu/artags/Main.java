@@ -80,7 +80,7 @@ public class Main {
     @Data
     static class Options {
 
-        @Option(name = "-h", aliases = "--help", usage = "print help.", metaVar = "PATH_TO_BASE_DIR")
+        @Option(name = "-h", aliases = "--help", usage = "print help.")
         private boolean isHelp;
 
         @Argument(required = true)
