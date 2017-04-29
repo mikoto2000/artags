@@ -32,8 +32,8 @@ import lombok.Data;
  */
 public class Main {
 
-    private static final String = CHARSET_DEFAULT = "UTF-8";
-    private static final String = OUTPUT_FILE_PATH_DEFAULT = "./tags";
+    private static final String CHARSET_DEFAULT = "UTF-8";
+    private static final String OUTPUT_FILE_PATH_DEFAULT = "./tags";
 
     public static void main(String[] args)
             throws SAXException,
