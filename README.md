@@ -8,6 +8,8 @@ Usage:
 
 ```sh
 java -jar artags-x.x.x.jar PATH_TO_BASE_DIR
+
+java -jar artags-x.x.x.jar PATH_TO_BASE_DIR -e EXCLUDE_PATTERN
 ```
 
 

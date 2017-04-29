@@ -65,6 +65,9 @@ public class Main {
             charset = CHARSET_DEFAULT;
         }
 
+        // Exclude 設定
+        String excludePattern = options.getExcludePattern();
+
         // 出力先設定
         String outputFilePathStr = options.getOutputFilePathStr();
         if (outputFilePathStr == null) {
@@ -72,7 +75,7 @@ public class Main {
         }
 
         // 指定されたディレクトリ以下の arxml ファイル一覧を取得する
-        List<Arxml> arxmls = Artags.findArxmls(options.getTargetDirectories());
+        List<Arxml> arxmls = Artags.findArxmls(options.getTargetDirectories(), excludePattern);
 
         // 主処理
         // arxml リストを一つずつ読み込み、タグファイルのレコードを作成する。
@@ -115,6 +118,9 @@ public class Main {
 
         @Option(name = "-c", aliases = "--charset", usage = "output file charset.(default:" + CHARSET_DEFAULT + ")", metaVar = "OUTPUT_FILE_CHARSET")
         private String charset;
+
+        @Option(name = "-e", aliases = "--exclude", usage = "exclude path pattern.", metaVar = "ExCLUDE_PATH_PATTERN")
+        private String excludePattern;
 
         @Argument(required = true)
         private List<String> targetDirectories;
