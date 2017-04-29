@@ -1,6 +1,11 @@
 package jp.dip.oyasirazu.artags;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +31,10 @@ import lombok.Data;
  * TODO: コマンドの使い方を説明
  */
 public class Main {
+
+    private static final String = CHARSET_DEFAULT = "UTF-8";
+    private static final String = OUTPUT_FILE_PATH_DEFAULT = "./tags";
+
     public static void main(String[] args)
             throws SAXException,
                     XPathExpressionException,
@@ -50,6 +59,18 @@ public class Main {
             System.exit(0);
         }
 
+        // Charset 設定
+        String charset = options.getCharset();
+        if (charset == null) {
+            charset = CHARSET_DEFAULT;
+        }
+
+        // 出力先設定
+        String outputFilePathStr = options.getOutputFilePathStr();
+        if (outputFilePathStr == null) {
+            outputFilePathStr = OUTPUT_FILE_PATH_DEFAULT;
+        }
+
         // 指定されたディレクトリ以下の arxml ファイル一覧を取得する
         List<Arxml> arxmls = Artags.findArxmls(options.getTargetDirectories());
 
@@ -62,9 +83,15 @@ public class Main {
         }
 
         // タグレコードを出力
-        // TODO: ファイル出力する
-        for (Record record : allRecords) {
-            System.out.println(record.buildRecordString());
+        try (BufferedWriter bw = Files.newBufferedWriter(
+                    Paths.get(outputFilePathStr),
+                    Charset.forName(charset),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING,
+                    StandardOpenOption.WRITE)) {
+            for (Record record : allRecords) {
+                bw.write(record.buildRecordString() + "\n");
+            }
         }
     }
 
@@ -82,6 +109,12 @@ public class Main {
 
         @Option(name = "-h", aliases = "--help", usage = "print help.")
         private boolean isHelp;
+
+        @Option(name = "-o", aliases = "--output", usage = "output file path.(default: " + OUTPUT_FILE_PATH_DEFAULT + ")", metaVar = "OUTPUT_FILE")
+        private String outputFilePathStr;
+
+        @Option(name = "-c", aliases = "--charset", usage = "output file charset.(default:" + CHARSET_DEFAULT + ")", metaVar = "OUTPUT_FILE_CHARSET")
+        private String charset;
 
         @Argument(required = true)
         private List<String> targetDirectories;
