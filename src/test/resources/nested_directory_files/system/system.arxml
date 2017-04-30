@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_4-0-3_STRICT.xsd">
+    <AR-PACKAGES>
+        <AR-PACKAGE>
+            <SHORT-NAME>SystemDescription</SHORT-NAME>
+            <ELEMENTS>
+                <CLIENT-SERVER-INTERFACE>
+                    <SHORT-NAME>Interface</SHORT-NAME>
+                    <IS-SERVICE>false</IS-SERVICE>
+                    <OPERATIONS>
+                        <CLIENT-SERVER-OPERATION>
+                            <SHORT-NAME>Operation</SHORT-NAME>
+                            <ARGUMENTS>
+                                <ARGUMENT-DATA-PROTOTYPE>
+                                    <SHORT-NAME>angle</SHORT-NAME>
+                                    <TYPE-TREF DEST="IMPLEMENTATION-DATA-TYPE">/ImplDataTypes/ImplDataType</TYPE-TREF>
+                                    <DIRECTION>IN</DIRECTION>
+                                </ARGUMENT-DATA-PROTOTYPE>
+                            </ARGUMENTS>
+                        </CLIENT-SERVER-OPERATION>
+                    </OPERATIONS>
+                </CLIENT-SERVER-INTERFACE>
+                <APPLICATION-SW-COMPONENT-TYPE>
+                    <SHORT-NAME>ApplicationSwcType</SHORT-NAME>
+                    <PORTS>
+                        <R-PORT-PROTOTYPE>
+                            <SHORT-NAME>Port</SHORT-NAME>
+                            <REQUIRED-INTERFACE-TREF DEST="CLIENT-SERVER-INTERFACE">/SystemDescription/Interface</REQUIRED-INTERFACE-TREF>
+                        </R-PORT-PROTOTYPE>
+                    </PORTS>
+                    <INTERNAL-BEHAVIORS>
+                        <SWC-INTERNAL-BEHAVIOR>
+                            <SHORT-NAME>InternalBehaviorName</SHORT-NAME>
+                            <EVENTS>
+                                <TIMING-EVENT>
+                                    <SHORT-NAME>TimingEventName</SHORT-NAME>
+                                    <START-ON-EVENT-REF DEST="RUNNABLE-ENTITY">/SystemDescription/ApplicationSwcType/InternalBehaviorName/Runnable</START-ON-EVENT-REF>
+                                    <PERIOD>0.02</PERIOD>
+                                </TIMING-EVENT>
+                            </EVENTS>
+                            <HANDLE-TERMINATION-AND-RESTART>NO-SUPPORT</HANDLE-TERMINATION-AND-RESTART>
+                            <RUNNABLES>
+                                <RUNNABLE-ENTITY>
+                                    <SHORT-NAME>Runnable</SHORT-NAME>
+                                    <MINIMUM-START-INTERVAL>0.0</MINIMUM-START-INTERVAL>
+                                    <CAN-BE-INVOKED-CONCURRENTLY>false</CAN-BE-INVOKED-CONCURRENTLY>
+                                    <SERVER-CALL-POINTS>
+                                        <SYNCHRONOUS-SERVER-CALL-POINT>
+                                            <SHORT-NAME>ServerCallPoint_Runnable_Port_Operation</SHORT-NAME>
+                                            <OPERATION-IREF>
+                                                <CONTEXT-R-PORT-REF DEST="R-PORT-PROTOTYPE">/SystemDescription/ApplicationSwcType/Port</CONTEXT-R-PORT-REF>
+                                                <TARGET-REQUIRED-OPERATION-REF DEST="CLIENT-SERVER-OPERATION">/SystemDescription/Interface/Operation</TARGET-REQUIRED-OPERATION-REF>
+                                            </OPERATION-IREF>
+                                            <TIMEOUT>0.0</TIMEOUT>
+                                        </SYNCHRONOUS-SERVER-CALL-POINT>
+                                    </SERVER-CALL-POINTS>
+                                    <SYMBOL>Runnable</SYMBOL>
+                                </RUNNABLE-ENTITY>
+                            </RUNNABLES>
+                            <SUPPORTS-MULTIPLE-INSTANTIATION>false</SUPPORTS-MULTIPLE-INSTANTIATION>
+                        </SWC-INTERNAL-BEHAVIOR>
+                    </INTERNAL-BEHAVIORS>
+                </APPLICATION-SW-COMPONENT-TYPE>
+            </ELEMENTS>
+        </AR-PACKAGE>
+    </AR-PACKAGES>
+</AUTOSAR>
