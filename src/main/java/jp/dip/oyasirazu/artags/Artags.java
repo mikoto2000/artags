@@ -66,12 +66,16 @@ public class Artags {
     public static List<Arxml> findArxmls(List<String> baseDirectories, String excludePattern)
             throws IOException {
 
-        List<Arxml> arxmls;
-
+        // TODO: もっといい感じにできない？？？
+        List<Arxml> arxmls = new ArrayList<>();
         if (excludePattern == null) {
-            arxmls = findArxmls(baseDirectories);
+            for (String baseDirectory : baseDirectories) {
+                arxmls.addAll(findArxmls(baseDirectory));
+            }
         } else {
-            arxmls = findArxmlsWithExclude(baseDirectories, excludePattern);
+            for (String baseDirectory : baseDirectories) {
+                arxmls.addAll(findArxmlsWithExclude(baseDirectory, excludePattern));
+            }
         }
 
         return arxmls;
@@ -80,40 +84,38 @@ public class Artags {
     /**
      * 指定したディレクトリ以下の arxml ファイルを検索します。
      *
-     * @param baseDirectories arxml ファイルを探すディレクトリのリスト
+     * @param baseDirectory arxml ファイルを探すディレクトリのリスト
      *
      * @return 指定したディレクトリ以下の arxml インスタンスのリスト
      */
-    public static List<Arxml> findArxmls(List<String> baseDirectories)
+    public static List<Arxml> findArxmls(String baseDirectory)
             throws IOException {
 
         // 指定されたディレクトリ以下の arxml ファイルを抽出し、 arxmls に格納
         List<Arxml> arxmls = new ArrayList<>();
-        for (String baseDirectory : baseDirectories) {
 
-            // 今回のループで指定されたディレクトリ以下の arxml ファイルを抽出
-            Files.walkFileTree(Paths.get(baseDirectory),
-                new SimpleFileVisitor<Path>() {
+        // 指定されたディレクトリ以下の arxml ファイルを抽出
+        Files.walkFileTree(Paths.get(baseDirectory),
+            new SimpleFileVisitor<Path>() {
 
-                    @Override
-                    public FileVisitResult visitFile(
-                            Path file,
-                            BasicFileAttributes attr) throws IOException {
+                @Override
+                public FileVisitResult visitFile(
+                        Path file,
+                        BasicFileAttributes attr) throws IOException {
 
-                        // arxml ファイルであれば、リストに追加する
-                        if (file.toString().endsWith("arxml")) {
-                            try {
-                                arxmls.add(new Arxml(file.toString(), createDocument(file)));
-                            } catch (SAXException|ParserConfigurationException e) {
-                                // TODO: エラー処理をまじめに考える
-                                System.err.println(e);
-                            }
+                    // arxml ファイルであれば、リストに追加する
+                    if (file.toString().endsWith("arxml")) {
+                        try {
+                            arxmls.add(new Arxml(file.toString(), createDocument(file)));
+                        } catch (SAXException|ParserConfigurationException e) {
+                            // TODO: エラー処理をまじめに考える
+                            System.err.println(e);
                         }
-
-                        return FileVisitResult.CONTINUE;
                     }
-                });
-        }
+
+                    return FileVisitResult.CONTINUE;
+                }
+            });
 
         return arxmls;
     }
@@ -121,12 +123,12 @@ public class Artags {
     /**
      * 指定したディレクトリ以下の arxml ファイルを検索します。
      *
-     * @param baseDirectories arxml ファイルを探すディレクトリのリスト
+     * @param baseDirectory arxml ファイルを探すディレクトリ
      * @param excludePattern 除外するパスの正規表現パターン文字列
      *
      * @return 指定したディレクトリ以下の arxml インスタンスのリスト
      */
-    public static List<Arxml> findArxmlsWithExclude(List<String> baseDirectories, String excludePattern)
+    public static List<Arxml> findArxmlsWithExclude(String baseDirectory, String excludePattern)
             throws IOException {
 
         // 除外ディレクトリ用のパターンをコンパイルする
@@ -134,53 +136,51 @@ public class Artags {
 
         // 指定されたディレクトリ以下の arxml ファイルを抽出し、 arxmls に格納
         List<Arxml> arxmls = new ArrayList<>();
-        for (String baseDirectory : baseDirectories) {
 
-            // 今回のループで指定されたディレクトリ以下の arxml ファイルを抽出
-            Files.walkFileTree(Paths.get(baseDirectory),
-                new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult preVisitDirectory(
-                            Path dir,
-                            BasicFileAttributes attrs) throws IOException {
+        // 指定されたディレクトリ以下の arxml ファイルを抽出
+        Files.walkFileTree(Paths.get(baseDirectory),
+            new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(
+                        Path dir,
+                        BasicFileAttributes attrs) throws IOException {
 
-                        // excludePattern にマッチしたら、サブツリーをスキップ
-                        Matcher m = pattern.matcher(dir.toString());
-                        boolean isMatch = m.matches();
-                        if (isMatch) {
-                            return FileVisitResult.SKIP_SUBTREE;
-                        } else {
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                    }
-
-                    @Override
-                    public FileVisitResult visitFile(
-                            Path file,
-                            BasicFileAttributes attr) throws IOException {
-
-                        // excludePattern にマッチしたら、このファイルはスキップ
-                        Matcher m = pattern.matcher(file.toString());
-                        boolean isMatch = m.matches();
-                        if (isMatch) {
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        // arxml ファイルであれば、リストに追加する
-                        if (file.toString().endsWith("arxml")) {
-                            try {
-                                arxmls.add(new Arxml(file.toString(), createDocument(file)));
-                            } catch (SAXException|ParserConfigurationException e) {
-                                // TODO: エラー処理をまじめに考える
-                                System.err.println(e);
-                            }
-                        }
-
+                    // excludePattern にマッチしたら、サブツリーをスキップ
+                    Matcher m = pattern.matcher(dir.toString());
+                    boolean isMatch = m.matches();
+                    if (isMatch) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    } else {
                         return FileVisitResult.CONTINUE;
                     }
-                });
-        }
+
+                }
+
+                @Override
+                public FileVisitResult visitFile(
+                        Path file,
+                        BasicFileAttributes attr) throws IOException {
+
+                    // excludePattern にマッチしたら、このファイルはスキップ
+                    Matcher m = pattern.matcher(file.toString());
+                    boolean isMatch = m.matches();
+                    if (isMatch) {
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    // arxml ファイルであれば、リストに追加する
+                    if (file.toString().endsWith("arxml")) {
+                        try {
+                            arxmls.add(new Arxml(file.toString(), createDocument(file)));
+                        } catch (SAXException|ParserConfigurationException e) {
+                            // TODO: エラー処理をまじめに考える
+                            System.err.println(e);
+                        }
+                    }
+
+                    return FileVisitResult.CONTINUE;
+                }
+            });
 
         return arxmls;
     }
