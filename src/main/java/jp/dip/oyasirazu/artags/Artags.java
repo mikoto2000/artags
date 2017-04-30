@@ -43,6 +43,18 @@ import lombok.Data;
  */
 public class Artags {
 
+    private static XPath xpath;
+
+    static {
+        XPathFactory xpathfactory = XPathFactory.newInstance();
+        xpath = xpathfactory.newXPath();
+    }
+
+    /**
+     * プライベートコンストラクタ。
+     */
+    private Artags() { }
+
     /**
      * 指定したディレクトリ以下の arxml ファイルを検索します。
      *
@@ -183,10 +195,6 @@ public class Artags {
      */
     private static List<Node> searchRefNodes(Arxml arxml) throws XPathExpressionException {
 
-        // TODO: クラス変数にしちゃうか。
-        XPathFactory xpathfactory = XPathFactory.newInstance();
-        XPath xpath = xpathfactory.newXPath();
-
         // get reference node list
         NodeList refNodeList = (NodeList)xpath.evaluate(
                 "//*[@DEST]",
@@ -219,10 +227,6 @@ public class Artags {
                     TransformerException,
                     ParserConfigurationException,
                     IOException {
-
-        // TODO: クラス変数にしちゃうか。
-        XPathFactory xpathfactory = XPathFactory.newInstance();
-        XPath xpath = xpathfactory.newXPath();
 
         // 参照しているノードのリストを取得する
         List<Node> refNodes = searchRefNodes(referredArxml);
