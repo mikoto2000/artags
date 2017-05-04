@@ -88,7 +88,7 @@ public class Artags {
      *
      * @return 指定したディレクトリ以下の arxml インスタンスのリスト
      */
-    public static List<Arxml> findArxmls(String baseDirectory)
+    private static List<Arxml> findArxmls(String baseDirectory)
             throws IOException {
 
         // 指定されたディレクトリ以下の arxml ファイルを抽出し、 arxmls に格納
@@ -128,7 +128,7 @@ public class Artags {
      *
      * @return 指定したディレクトリ以下の arxml インスタンスのリスト
      */
-    public static List<Arxml> findArxmlsWithExclude(String baseDirectory, String excludePattern)
+    private static List<Arxml> findArxmlsWithExclude(String baseDirectory, String excludePattern)
             throws IOException {
 
         // 除外ディレクトリ用のパターンをコンパイルする
