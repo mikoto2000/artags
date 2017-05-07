@@ -2,6 +2,8 @@ package jp.dip.oyasirazu.artags;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -18,7 +20,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.fail;
 
 /**
  * TestArtags
@@ -28,17 +32,82 @@ public class TestArtags {
 
     @Test
     public void testFindArxmls() {
-        fail();
+        // TODO: Path の比較ってどうするのがスマートなんだろうか？？？
+        try {
+            List<String> oneFiles = createStringList("./src/test/resources/one_file/");
+            List<Arxml> arxmls1 = Artags.findArxmls(oneFiles, null);
+            assertThat(arxmls1.size(), is(1));
+            assertThat(arxmls1.get(0).getFilePath().toString(),
+                    is(newPath("./src/test/resources/one_file/test.arxml").toString()));
+
+
+            List<String> nestedDirectory = createStringList("./src/test/resources/nested_directory/");
+            List<Arxml> arxmls2 = Artags.findArxmls(nestedDirectory, null);
+            assertThat(arxmls2.size(), is(1));
+            assertThat(arxmls2.get(0).getFilePath().toString(),
+                    is(newPath("./src/test/resources/nested_directory/nest_directory/test.arxml").toString()));
+
+
+            List<String> nestedDirectoryFiles = createStringList("./src/test/resources/nested_directory_files/");
+            List<Arxml> arxmls3 = Artags.findArxmls(nestedDirectoryFiles, null);
+            assertThat(arxmls3.size(), is(2));
+            // TODO: 順番に依存しない書き方にしないと...
+            assertThat(arxmls3.get(0).getFilePath().toString(),
+                    is(newPath("./src/test/resources/nested_directory_files/common/common.arxml").toString()));
+            assertThat(arxmls3.get(1).getFilePath().toString(),
+                    is(newPath("./src/test/resources/nested_directory_files/system/system.arxml").toString()));
+
+
+            List<String> multiDir = createStringList(
+                        "./src/test/resources/one_file/",
+                        "./src/test/resources/nested_directory/",
+                        "./src/test/resources/nested_directory_files/");
+            List<Arxml> arxmls4 = Artags.findArxmls(multiDir, null);
+            assertThat(arxmls4.size(), is(4));
+            // TODO: 順番に依存しない書き方にしないと...
+            assertThat(arxmls4.get(0).getFilePath().toString(),
+                    is(newPath("./src/test/resources/one_file/test.arxml").toString()));
+            assertThat(arxmls4.get(1).getFilePath().toString(),
+                    is(newPath("./src/test/resources/nested_directory/nest_directory/test.arxml").toString()));
+            assertThat(arxmls4.get(2).getFilePath().toString(),
+                    is(newPath("./src/test/resources/nested_directory_files/common/common.arxml").toString()));
+            assertThat(arxmls4.get(3).getFilePath().toString(),
+                    is(newPath("./src/test/resources/nested_directory_files/system/system.arxml").toString()));
+
+
+            List<String> exclude = createStringList(
+                        "./src/test/resources/one_file/",
+                        "./src/test/resources/nested_directory/",
+                        "./src/test/resources/nested_directory_files/");
+            List<Arxml> arxmls5 = Artags.findArxmls(exclude, ".*system.*");
+            assertThat(arxmls5.size(), is(3));
+            // TODO: 順番に依存しない書き方にしないと...
+            assertThat(arxmls5.get(0).getFilePath().toString(),
+                    is(newPath("./src/test/resources/one_file/test.arxml").toString()));
+            assertThat(arxmls5.get(1).getFilePath().toString(),
+                    is(newPath("./src/test/resources/nested_directory/nest_directory/test.arxml").toString()));
+            assertThat(arxmls5.get(2).getFilePath().toString(),
+                    is(newPath("./src/test/resources/nested_directory_files/common/common.arxml").toString()));
+        } catch (IOException e) {
+            fail("例外が出ちゃいましたねー : " + e.getMessage());
+        }
     }
 
-    @Test
-    public void testFindArxmlsWithExclude() {
-        fail();
+    private List<String> createStringList(String... strs) {
+        List<String> strList = Arrays.asList(strs);
+        return strList;
     }
 
-    @Test
-    public void testCreateTagsString() {
-        fail();
+    /**
+     * スラッシュ区切りの文字列から Path を生成する。
+     *
+     * 制限: スラッシュで分割した配列が、最低でも長さ 2 になるような文字列でないと例外出ます。
+     */
+    private Path newPath(String pathStr) {
+        String[] pathArray = pathStr.split("/");
+        String first = pathArray[0];
+        String[] more = Arrays.copyOfRange(pathArray, 1, pathArray.length);
+        return Paths.get(first, more);
     }
 
     @Before
