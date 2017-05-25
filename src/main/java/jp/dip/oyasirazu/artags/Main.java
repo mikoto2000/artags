@@ -85,13 +85,25 @@ public class Main {
             allRecords.addAll(tags);
         }
 
+        // アペンドモードを判定してオプション配列を生成
+        StandardOpenOption[] openOptions;
+        if (options.isAppend()) {
+            openOptions = new StandardOpenOption[]{
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND,
+                    StandardOpenOption.WRITE};
+        } else {
+            openOptions = new StandardOpenOption[]{
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING,
+                    StandardOpenOption.WRITE};
+        }
+
         // タグレコードを出力
         try (BufferedWriter bw = Files.newBufferedWriter(
                     Paths.get(outputFilePathStr),
                     Charset.forName(charset),
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING,
-                    StandardOpenOption.WRITE)) {
+                    openOptions)) {
             for (Record record : allRecords) {
                 bw.write(record.buildRecordString() + "\n");
             }
@@ -112,6 +124,9 @@ public class Main {
 
         @Option(name = "-h", aliases = "--help", usage = "print help.")
         private boolean isHelp;
+
+        @Option(name = "-a", aliases = "--append", usage = "append mode.")
+        private boolean isAppend;
 
         @Option(name = "-o", aliases = "--output", usage = "output file path.(default: " + OUTPUT_FILE_PATH_DEFAULT + ")", metaVar = "OUTPUT_FILE")
         private String outputFilePathStr;
