@@ -254,7 +254,7 @@ public class Artags {
                     tags.add(new Record(
                             symbol,
                             arxml.getFilePath(),
-                            convertDomToString(targetNodeList.item(i), symbol),
+                            String.valueOf(getLineNumber(targetNodeList.item(i))),
                             targetNodeList.item(i).getNodeName(),
                             arHierarchyPath));
                 }
@@ -290,39 +290,42 @@ public class Artags {
     }
 
     /**
-     * DOM ノードを XML 文字列に変換する。
-     *
-     * @param node XML 文字列に変換したいノードインスタンス
-     * @param symbol 
-     *
-     * TODO: 引数の symbol を無くす。そもそも名が体を表していない処理になってる。
-     *       ここでは XML 文字列に直すだけにしないとダメですね。
+     * 対象ノードの行番号を取得する。
      */
-    private static String convertDomToString(Node node, String symbol) throws TransformerException {
-        StringWriter sw = new StringWriter();
-        TransformerFactory tfactory = TransformerFactory.newInstance();
-        Transformer transformer = tfactory.newTransformer();
+    private static long getLineNumber(Node node) {
+        String beforeLineTextContents = buildBeforeLineTextContents(node);
 
-        // XML Header disable.
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        // 組み立てたテキスト内の改行コードを数える
+        // 行番号は 1 オリジンなので +1.
+        // XML ヘッダーが 1 行あるはずなので +1.
+        long count = 2;
+        for (int i = 0; i < beforeLineTextContents.length(); i++) {
+            if (beforeLineTextContents.charAt(i) == '\n') {
+                count++;
+            }
+        }
 
-        transformer.transform(
-                new DOMSource(node), new StreamResult(sw));
+        return count;
+    }
 
-        // TODO: この辺ちゃんと整理したいですねー
-        String xmlString = sw.toString();
-        xmlString = xmlString.substring(0, (xmlString.length() < 256 ? xmlString.length() : 256));
-        xmlString = xmlString.replace("<", "\\_s\\{-\\}<");
-        xmlString = xmlString.replace(">", ">\\_s\\{-\\}");
-        xmlString = xmlString.substring("\\_s\\{-\\}".length(), xmlString.lastIndexOf("\\_s\\{-\\}") - 1);
-        xmlString = xmlString.replace("/", "\\/");
-        xmlString = xmlString.replace("\t", "");
-        xmlString = xmlString.replace("\n", "");
-        xmlString = xmlString.replace("\r", "");
-        xmlString = xmlString.replace("\\_s\\{-\\}\\_s\\{-\\}", "\\_s\\{-\\}");
-        xmlString = xmlString.substring(xmlString.indexOf(symbol), xmlString.length());
+    /**
+     * 行番号を取得するため、自分より上(前)の行のテキストをすべて取得する。
+     */
+    private static String buildBeforeLineTextContents(Node node) {
+        StringBuilder sb = new StringBuilder();
 
-        return "/" + xmlString + "/";
+        Node parent = node.getParentNode();
+        if (parent != null) {
+            sb.append(buildBeforeLineTextContents(parent));
+        }
+
+        Node loopTarget = node.getPreviousSibling();
+        while (loopTarget != null) {
+            sb.append(loopTarget.getTextContent());
+            loopTarget = loopTarget.getPreviousSibling();
+        }
+
+        return sb.toString();
     }
 
     /**
