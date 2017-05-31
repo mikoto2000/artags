@@ -1,7 +1,6 @@
 package jp.dip.oyasirazu.artags;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,21 +9,18 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -42,13 +38,6 @@ import lombok.Data;
  * Artags の機能を提供するクラス。
  */
 public class Artags {
-
-    private static XPath xpath;
-
-    static {
-        XPathFactory xpathfactory = XPathFactory.newInstance();
-        xpath = xpathfactory.newXPath();
-    }
 
     /**
      * プライベートコンストラクタ。
@@ -105,12 +94,7 @@ public class Artags {
 
                     // arxml ファイルであれば、リストに追加する
                     if (file.toString().endsWith("arxml")) {
-                        try {
-                            arxmls.add(new Arxml(file.toString(), createDocument(file)));
-                        } catch (SAXException|ParserConfigurationException e) {
-                            // TODO: エラー処理をまじめに考える
-                            System.err.println(e);
-                        }
+                        arxmls.add(new Arxml(file.toString()));
                     }
 
                     return FileVisitResult.CONTINUE;
@@ -170,12 +154,7 @@ public class Artags {
 
                     // arxml ファイルであれば、リストに追加する
                     if (file.toString().endsWith("arxml")) {
-                        try {
-                            arxmls.add(new Arxml(file.toString(), createDocument(file)));
-                        } catch (SAXException|ParserConfigurationException e) {
-                            // TODO: エラー処理をまじめに考える
-                            System.err.println(e);
-                        }
+                        arxmls.add(new Arxml(file.toString()));
                     }
 
                     return FileVisitResult.CONTINUE;
@@ -193,12 +172,15 @@ public class Artags {
      *
      * @return 参照先を設定しているノードインスタンスのリスト
      */
-    private static List<Node> searchRefNodes(Arxml arxml) throws XPathExpressionException {
+    private static List<Node> searchRefNodes(Arxml arxml) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
+
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        XPath xpath = xPathFactory.newXPath();
 
         // get reference node list
         NodeList refNodeList = (NodeList)xpath.evaluate(
                 "//*[@DEST]",
-                arxml.getElement(),
+                createDocument(Paths.get(arxml.getFilePath())),
                 XPathConstants.NODESET);
 
         // move NodeList to ArrayList<Node>.
@@ -232,34 +214,9 @@ public class Artags {
         List<Node> refNodes = searchRefNodes(referredArxml);
 
         // avarableArxmls から、 refNode の実体を探す
-        HashSet<Record> tags = new HashSet<>();
-        for (Node n : refNodes) {
-            String arHierarchyPath = n.getTextContent();
-            String[] arHierarchyArray = arHierarchyPath.split("/");
-            String symbol = arHierarchyArray[arHierarchyArray.length - 1];
-
-            // 実体を探すための XPath 式を組み立てる
-            String entitySearchXPath = buildEntitySearchXPath(arHierarchyPath);
-
-            // 全 arxml に対して直前で組み立てた XPath 式を使って実体を取得
-            for (Arxml arxml : avarableArxmls) {
-                NodeList targetNodeList = (NodeList)xpath.evaluate(
-                        entitySearchXPath,
-                        arxml.getElement(),
-                        XPathConstants.NODESET);
-
-                // 実体が見つかったら返却用 Set に詰め込む
-                int targetNodeSize = targetNodeList.getLength();
-                for (int i = 0; i < targetNodeSize; i++) {
-                    tags.add(new Record(
-                            symbol,
-                            arxml.getFilePath(),
-                            String.valueOf(getLineNumber(targetNodeList.item(i))),
-                            targetNodeList.item(i).getNodeName(),
-                            arHierarchyPath));
-                }
-            }
-        }
+        Set<Record> tags = refNodes.parallelStream()
+            .map((n) -> searchNodeElementFromAvarableArxmls(n, avarableArxmls))
+            .flatMap(v -> v.stream()).collect(Collectors.toSet());
 
         return tags;
     }
@@ -345,6 +302,51 @@ public class Artags {
     }
 
     /**
+     * 指定された参照元ノードに記載されている参照先ノードを探し、
+     * ctags のレコード形式にして記録する。
+     *
+     * @param n 参照元ノード
+     * @param avarableArxmls 参照先を探す対象の ARXML ファイルリスト
+     */
+    public static Set<Record> searchNodeElementFromAvarableArxmls(Node n,
+            List<Arxml> avarableArxmls) {
+        String arHierarchyPath = n.getTextContent();
+        String[] arHierarchyArray = arHierarchyPath.split("/");
+        String symbol = arHierarchyArray[arHierarchyArray.length - 1];
+
+        // 実体を探すための XPath 式を組み立てる
+        String entitySearchXPath = buildEntitySearchXPath(arHierarchyPath);
+
+        // 全 arxml に対して直前で組み立てた XPath 式を使って実体を取得
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        XPath xpath = xPathFactory.newXPath();
+
+        Set<Record> t = Collections.synchronizedSet(new HashSet<>());
+        for (Arxml arxml : avarableArxmls) {
+            try {
+                NodeList targetNodeList = (NodeList)xpath.evaluate(
+                            entitySearchXPath,
+                            createDocument(Paths.get(arxml.getFilePath())),
+                            XPathConstants.NODESET);
+
+                // 実体が見つかったら返却用 Set に詰め込む
+                int targetNodeSize = targetNodeList.getLength();
+                for (int i = 0; i < targetNodeSize; i++) {
+                    t.add(new Record(
+                            symbol,
+                            arxml.getFilePath(),
+                            String.valueOf(getLineNumber(targetNodeList.item(i))),
+                            targetNodeList.item(i).getNodeName(),
+                            arHierarchyPath));
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("file : " + arxml.getFilePath() + ".", e);
+            }
+        }
+        return t;
+    }
+
+    /**
      * タグファイルの 1 レコードを表すクラス。
      */
     // SYMBO\\t.\\PATH\\TO\\FILE\\tSEARCH_STR/;"\\tTYPE\\tAR_HIERARCHY_PATH\\tfile:
@@ -374,7 +376,6 @@ public class Artags {
     @Data
     public static class Arxml {
         private String filePath;
-        private Document element;
     }
 }
 
