@@ -3,6 +3,7 @@ package jp.dip.oyasirazu.artags;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +13,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
 
 import jp.dip.oyasirazu.artags.Artags.Arxml;
+import jp.dip.oyasirazu.artags.Artags.Record;
 
 import org.junit.After;
 import org.junit.Before;
@@ -89,6 +91,42 @@ public class TestArtags {
             assertThat(arxmls5.get(2).getFilePath().toString(),
                     is(newPath("./src/test/resources/nested_directory_files/common/common.arxml").toString()));
         } catch (IOException e) {
+            fail("例外が出ちゃいましたねー : " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testCreateTagsString() {
+        try {
+            Arxml arxml1 = new Arxml("./src/test/resources/one_file/test.arxml");
+            List<Arxml> avarableArxmls1 = new ArrayList<>();
+            avarableArxmls1.add(arxml1);
+
+            Set<Record> records1 = Artags.createTagsString(arxml1, avarableArxmls1);
+            assertThat(records1.size(), is(6));
+
+            for (Record record : records1) {
+                if (record.getSymbol().equals("sint8")) {
+                    assertThat(record.getSearchStr(), is("7"));
+                } else if (record.getSymbol().equals("ImplDataType")) {
+                    assertThat(record.getSearchStr(), is("20"));
+                } else if (record.getSymbol().equals("Interface")) {
+                    assertThat(record.getSearchStr(), is("36"));
+                } else if (record.getSymbol().equals("Runnable")) {
+                    assertThat(record.getSearchStr(), is("72"));
+                } else if (record.getSymbol().equals("Port")) {
+                    assertThat(record.getSearchStr(), is("55"));
+                } else if (record.getSymbol().equals("Operation")) {
+                    assertThat(record.getSearchStr(), is("40"));
+                }
+            }
+
+            System.out.println(records1.size());
+        } catch (XPathExpressionException
+                | SAXException
+                | ParserConfigurationException
+                | TransformerException
+                | IOException e) {
             fail("例外が出ちゃいましたねー : " + e.getMessage());
         }
     }
