@@ -91,7 +91,6 @@ tasks.withType(Checkstyle) {
     reports {
         xml.enabled false
         html.enabled true
-        html.destination = "${buildDir}/reports/checkstyle/checkstyle.html"
     }
 }
 
