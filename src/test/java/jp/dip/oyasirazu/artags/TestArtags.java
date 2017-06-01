@@ -131,6 +131,42 @@ public class TestArtags {
         }
     }
 
+    @Test
+    public void testCreateTagsString_ヘッダ直後のコメント() {
+        try {
+            Arxml arxml1 = new Arxml("./src/test/resources/contents_variation/01_comments.arxml");
+            List<Arxml> avarableArxmls1 = new ArrayList<>();
+            avarableArxmls1.add(arxml1);
+
+            Set<Record> records1 = Artags.createTagsString(arxml1, avarableArxmls1);
+            assertThat(records1.size(), is(6));
+
+            for (Record record : records1) {
+                if (record.getSymbol().equals("sint8")) {
+                    assertThat(record.getSearchStr(), is("15"));
+                } else if (record.getSymbol().equals("ImplDataType")) {
+                    assertThat(record.getSearchStr(), is("25"));
+                } else if (record.getSymbol().equals("Interface")) {
+                    assertThat(record.getSearchStr(), is("44"));
+                } else if (record.getSymbol().equals("Runnable")) {
+                    assertThat(record.getSearchStr(), is("80"));
+                } else if (record.getSymbol().equals("Port")) {
+                    assertThat(record.getSearchStr(), is("63"));
+                } else if (record.getSymbol().equals("Operation")) {
+                    assertThat(record.getSearchStr(), is("48"));
+                }
+            }
+
+            System.out.println(records1.size());
+        } catch (XPathExpressionException
+                | SAXException
+                | ParserConfigurationException
+                | TransformerException
+                | IOException e) {
+            fail("例外が出ちゃいましたねー : " + e.getMessage());
+        }
+    }
+
     private List<String> createStringList(String... strs) {
         List<String> strList = Arrays.asList(strs);
         return strList;
