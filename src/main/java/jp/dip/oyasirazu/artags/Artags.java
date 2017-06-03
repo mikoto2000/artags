@@ -1,6 +1,7 @@
 package jp.dip.oyasirazu.artags;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,13 +27,13 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
 /**
  * Artags の機能を提供するクラス。
@@ -254,8 +255,7 @@ public class Artags {
 
         // 組み立てたテキスト内の改行コードを数える
         // 行番号は 1 オリジンなので +1.
-        // XML ヘッダーが 1 行あるはずなので +1.
-        long count = 2;
+        long count = 1;
         for (int i = 0; i < beforeLineTextContents.length(); i++) {
             if (beforeLineTextContents.charAt(i) == '\n') {
                 count++;
@@ -272,9 +272,11 @@ public class Artags {
         StringBuilder sb = new StringBuilder();
 
         Node parent = node.getParentNode();
-        if (parent != null) {
-            sb.append(buildBeforeLineTextContents(parent));
+        if (parent.getNodeType() == Node.DOCUMENT_NODE) {
+            return sb.toString();
         }
+
+        sb.append(buildBeforeLineTextContents(parent));
 
         Node loopTarget = node.getPreviousSibling();
         while (loopTarget != null) {
@@ -324,9 +326,38 @@ public class Artags {
         Set<Record> t = Collections.synchronizedSet(new HashSet<>());
         for (Arxml arxml : avarableArxmls) {
             try {
+
+                Path arxmlFilePath = Paths.get(arxml.getFilePath());
+                Document document = createDocument(arxmlFilePath);
+
+                // prolog のテキストが無視されてしまい行数が特定できないので、
+                // prolog だけテキストとして読み込んで改行文字を数える。
+                // TODO: もっとまともな感じにする
+                long prologLines = 0;
+                {
+                    String docEncoding = document.getXmlEncoding();
+                    Charset charset;
+                    if (docEncoding != null) {
+                        charset = Charset.forName(docEncoding);
+                    } else {
+                        charset = Charset.forName("UTF-8");
+                    }
+
+                    byte[] bytes = Files.readAllBytes(arxmlFilePath);
+                    String contents = new String(bytes, charset);
+                    int rootNodePosition = contents.indexOf("<AUTOSAR ");
+                    String prologString = contents.substring(0, rootNodePosition);
+
+                    for (int i = 0; i < prologString.length(); i++) {
+                        if (prologString.charAt(i) == '\n') {
+                            prologLines++;
+                        }
+                    }
+                }
+
                 NodeList targetNodeList = (NodeList)xpath.evaluate(
                             entitySearchXPath,
-                            createDocument(Paths.get(arxml.getFilePath())),
+                            document,
                             XPathConstants.NODESET);
 
                 // 実体が見つかったら返却用 Set に詰め込む
@@ -335,7 +366,7 @@ public class Artags {
                     t.add(new Record(
                             symbol,
                             arxml.getFilePath(),
-                            String.valueOf(getLineNumber(targetNodeList.item(i))),
+                            String.valueOf(prologLines + getLineNumber(targetNodeList.item(i))),
                             targetNodeList.item(i).getNodeName(),
                             arHierarchyPath));
                 }

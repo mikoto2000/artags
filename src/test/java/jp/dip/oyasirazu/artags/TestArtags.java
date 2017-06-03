@@ -121,7 +121,6 @@ public class TestArtags {
                 }
             }
 
-            System.out.println(records1.size());
         } catch (XPathExpressionException
                 | SAXException
                 | ParserConfigurationException
@@ -145,7 +144,7 @@ public class TestArtags {
                 if (record.getSymbol().equals("sint8")) {
                     assertThat(record.getSearchStr(), is("15"));
                 } else if (record.getSymbol().equals("ImplDataType")) {
-                    assertThat(record.getSearchStr(), is("25"));
+                    assertThat(record.getSearchStr(), is("28"));
                 } else if (record.getSymbol().equals("Interface")) {
                     assertThat(record.getSearchStr(), is("44"));
                 } else if (record.getSymbol().equals("Runnable")) {
@@ -157,7 +156,6 @@ public class TestArtags {
                 }
             }
 
-            System.out.println(records1.size());
         } catch (XPathExpressionException
                 | SAXException
                 | ParserConfigurationException
