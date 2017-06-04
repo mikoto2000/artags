@@ -327,37 +327,13 @@ public class Artags {
         for (Arxml arxml : avarableArxmls) {
             try {
 
-                Path arxmlFilePath = Paths.get(arxml.getFilePath());
-                Document document = createDocument(arxmlFilePath);
-
                 // prolog のテキストが無視されてしまい行数が特定できないので、
                 // prolog だけテキストとして読み込んで改行文字を数える。
-                // TODO: もっとまともな感じにする
-                long prologLines = 0;
-                {
-                    String docEncoding = document.getXmlEncoding();
-                    Charset charset;
-                    if (docEncoding != null) {
-                        charset = Charset.forName(docEncoding);
-                    } else {
-                        charset = Charset.forName("UTF-8");
-                    }
-
-                    byte[] bytes = Files.readAllBytes(arxmlFilePath);
-                    String contents = new String(bytes, charset);
-                    int rootNodePosition = contents.indexOf("<AUTOSAR ");
-                    String prologString = contents.substring(0, rootNodePosition);
-
-                    for (int i = 0; i < prologString.length(); i++) {
-                        if (prologString.charAt(i) == '\n') {
-                            prologLines++;
-                        }
-                    }
-                }
+                long prologLines = getPrologLineNumber(arxml);
 
                 NodeList targetNodeList = (NodeList)xpath.evaluate(
                             entitySearchXPath,
-                            document,
+                            createDocument(Paths.get(arxml.getFilePath())),
                             XPathConstants.NODESET);
 
                 // 実体が見つかったら返却用 Set に詰め込む
@@ -375,6 +351,35 @@ public class Artags {
             }
         }
         return t;
+    }
+
+    private static long getPrologLineNumber(Arxml arxml)
+            throws SAXException, ParserConfigurationException, IOException {
+
+        Path arxmlFilePath = Paths.get(arxml.getFilePath());
+        Document document = createDocument(arxmlFilePath);
+
+        String docEncoding = document.getXmlEncoding();
+        Charset charset;
+        if (docEncoding != null) {
+            charset = Charset.forName(docEncoding);
+        } else {
+            charset = Charset.forName("UTF-8");
+        }
+
+        byte[] bytes = Files.readAllBytes(arxmlFilePath);
+        String contents = new String(bytes, charset);
+        int rootNodePosition = contents.indexOf("<AUTOSAR ");
+        String prologString = contents.substring(0, rootNodePosition);
+
+        long prologLines = 0;
+        for (int i = 0; i < prologString.length(); i++) {
+            if (prologString.charAt(i) == '\n') {
+                prologLines++;
+            }
+        }
+
+        return prologLines;
     }
 
     /**
