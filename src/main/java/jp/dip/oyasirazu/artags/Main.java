@@ -74,17 +74,6 @@ public class Main {
             outputFilePathStr = OUTPUT_FILE_PATH_DEFAULT;
         }
 
-        // 指定されたディレクトリ以下の arxml ファイル一覧を取得する
-        List<Arxml> arxmls = Artags.findArxmls(options.getTargetDirectories(), excludePattern);
-
-        // 主処理
-        // arxml リストを一つずつ読み込み、タグファイルのレコードを作成する。
-        Set<Record> allRecords = new HashSet<Record>();
-        for (Arxml arxml : arxmls) {
-            Set<Record> tags = Artags.createTagsString(arxml, arxmls);
-            allRecords.addAll(tags);
-        }
-
         // アペンドモードを判定してオプション配列を生成
         StandardOpenOption[] openOptions;
         if (options.isAppend()) {
@@ -99,11 +88,26 @@ public class Main {
                     StandardOpenOption.WRITE};
         }
 
-        // タグレコードを出力
+        // ファイルを開いて主処理を開始する
+        // (主処理に時間がかかるので、先にファイルオープンを試行して
+        //  だめならすぐエラーが返るように配慮)
         try (BufferedWriter bw = Files.newBufferedWriter(
                     Paths.get(outputFilePathStr),
                     Charset.forName(charset),
                     openOptions)) {
+
+            // 指定されたディレクトリ以下の arxml ファイル一覧を取得する
+            List<Arxml> arxmls = Artags.findArxmls(options.getTargetDirectories(), excludePattern);
+
+            // 主処理
+            // arxml リストを一つずつ読み込み、タグファイルのレコードを作成する。
+            Set<Record> allRecords = new HashSet<Record>();
+            for (Arxml arxml : arxmls) {
+                Set<Record> tags = Artags.createTagsString(arxml, arxmls);
+                allRecords.addAll(tags);
+            }
+
+            // タグレコードを出力
             for (Record record : allRecords) {
                 bw.write(record.buildRecordString() + "\n");
             }
