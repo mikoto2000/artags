@@ -98,7 +98,7 @@ public class TestArtags {
     @Test
     public void testCreateTagsString() {
         try {
-            Arxml arxml1 = new Arxml("./src/test/resources/one_file/test.arxml");
+            Arxml arxml1 = new Arxml(Paths.get("./src/test/resources/one_file/test.arxml"));
             List<Arxml> avarableArxmls1 = new ArrayList<>();
             avarableArxmls1.add(arxml1);
 
@@ -133,7 +133,7 @@ public class TestArtags {
     @Test
     public void testCreateTagsString_ヘッダ直後のコメント() {
         try {
-            Arxml arxml1 = new Arxml("./src/test/resources/contents_variation/01_comments.arxml");
+            Arxml arxml1 = new Arxml(Paths.get("./src/test/resources/contents_variation/01_comments.arxml"));
             List<Arxml> avarableArxmls1 = new ArrayList<>();
             avarableArxmls1.add(arxml1);
 

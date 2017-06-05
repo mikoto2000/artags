@@ -90,12 +90,12 @@ public class Artags {
 
                 @Override
                 public FileVisitResult visitFile(
-                        Path file,
+                        Path filePath,
                         BasicFileAttributes attr) throws IOException {
 
                     // arxml ファイルであれば、リストに追加する
-                    if (file.toString().endsWith("arxml")) {
-                        arxmls.add(new Arxml(file.toString()));
+                    if (filePath.toString().endsWith("arxml")) {
+                        arxmls.add(new Arxml(filePath));
                     }
 
                     return FileVisitResult.CONTINUE;
@@ -143,19 +143,19 @@ public class Artags {
 
                 @Override
                 public FileVisitResult visitFile(
-                        Path file,
+                        Path filePath,
                         BasicFileAttributes attr) throws IOException {
 
                     // excludePattern にマッチしたら、このファイルはスキップ
-                    Matcher m = pattern.matcher(file.toString());
+                    Matcher m = pattern.matcher(filePath.toString());
                     boolean isMatch = m.matches();
                     if (isMatch) {
                         return FileVisitResult.CONTINUE;
                     }
 
                     // arxml ファイルであれば、リストに追加する
-                    if (file.toString().endsWith("arxml")) {
-                        arxmls.add(new Arxml(file.toString()));
+                    if (filePath.toString().endsWith("arxml")) {
+                        arxmls.add(new Arxml(filePath));
                     }
 
                     return FileVisitResult.CONTINUE;
@@ -181,7 +181,7 @@ public class Artags {
         // get reference node list
         NodeList refNodeList = (NodeList)xpath.evaluate(
                 "//*[@DEST]",
-                createDocument(Paths.get(arxml.getFilePath())),
+                createDocument(arxml.getFilePath()),
                 XPathConstants.NODESET);
 
         // move NodeList to ArrayList<Node>.
@@ -333,7 +333,7 @@ public class Artags {
 
                 NodeList targetNodeList = (NodeList)xpath.evaluate(
                             entitySearchXPath,
-                            createDocument(Paths.get(arxml.getFilePath())),
+                            createDocument(arxml.getFilePath()),
                             XPathConstants.NODESET);
 
                 // 実体が見つかったら返却用 Set に詰め込む
@@ -347,7 +347,7 @@ public class Artags {
                             arHierarchyPath));
                 }
             } catch (Exception e) {
-                throw new RuntimeException("file : " + arxml.getFilePath() + ".", e);
+                throw new RuntimeException("filePath : " + arxml.getFilePath() + ".", e);
             }
         }
         return t;
@@ -356,7 +356,7 @@ public class Artags {
     private static long getPrologLineNumber(Arxml arxml)
             throws SAXException, ParserConfigurationException, IOException {
 
-        Path arxmlFilePath = Paths.get(arxml.getFilePath());
+        Path arxmlFilePath = arxml.getFilePath();
         Document document = createDocument(arxmlFilePath);
 
         String docEncoding = document.getXmlEncoding();
@@ -390,7 +390,7 @@ public class Artags {
     @Data
     public static class Record {
         private String symbol;
-        private String filePath;
+        private Path filePath;
         private String searchStr;
         private String type;
         private String arHierarchyPath;
@@ -401,7 +401,19 @@ public class Artags {
          * @return タグファイルの 1 レコードとして出力する文字列
          */
         public String buildRecordString() {
-            return symbol + "\t" + filePath + "\t" + searchStr + ";\"\t\t" + arHierarchyPath + " (" + type + ")\tfile:";
+            return symbol + "\t" + filePath.toString() + "\t" + searchStr + ";\"\t\t" + arHierarchyPath + " (" + type + ")\tfile:";
+        }
+
+        /**
+         * タグファイルの 1 レコードとして出力する文字列を組み立てる。
+         *
+         * タグファイルに出力するパスを、 basePath からの相対パスにする。
+         *
+         * @param basePath タグファイルに出力するパスを、この basePath からの相対パスにする
+         * @return タグファイルの 1 レコードとして出力する文字列
+         */
+        public String buildRecordString(Path basePath) {
+            return symbol + "\t" + basePath.getParent().relativize(filePath).toString() + "\t" + searchStr + ";\"\t\t" + arHierarchyPath + " (" + type + ")\tfile:";
         }
     }
 
@@ -411,7 +423,7 @@ public class Artags {
     @AllArgsConstructor
     @Data
     public static class Arxml {
-        private String filePath;
+        private Path filePath;
     }
 }
 

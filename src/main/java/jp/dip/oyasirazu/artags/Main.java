@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
@@ -108,8 +109,9 @@ public class Main {
             }
 
             // タグレコードを出力
+            Path outputFilePath = Paths.get(outputFilePathStr);
             for (Record record : allRecords) {
-                bw.write(record.buildRecordString() + "\n");
+                bw.write(record.buildRecordString(outputFilePath) + "\n");
             }
         }
     }
