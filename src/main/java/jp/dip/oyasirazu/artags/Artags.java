@@ -250,6 +250,11 @@ public class Artags {
 
     /**
      * 対象ノードの行番号を取得する。
+     *
+     * この行番号は、ルートノードのある行を 1 行目とした場合の行数である。
+     * Artags#getPrologLineNumber の結果と足し合わせてファイルの行番号を取得する。
+     *
+     * @see Artags#getPrologLineNumber
      */
     private static long getLineNumber(Node node) {
         String beforeLineTextContents = buildBeforeLineTextContents(node);
@@ -310,6 +315,8 @@ public class Artags {
      *
      * @param n 参照元ノード
      * @param avarableArxmls 参照先を探す対象の ARXML ファイルリスト
+     *
+     * @return ctags のレコードを表すオブジェクトのセット
      */
     public static Set<Record> searchNodeElementFromAvarableArxmls(Node n,
             List<Arxml> avarableArxmls) {
@@ -324,7 +331,7 @@ public class Artags {
         XPathFactory xPathFactory = XPathFactory.newInstance();
         XPath xpath = xPathFactory.newXPath();
 
-        Set<Record> t = Collections.synchronizedSet(new HashSet<>());
+        Set<Record> t = new HashSet<>();
         for (Arxml arxml : avarableArxmls) {
             try {
 
@@ -340,20 +347,33 @@ public class Artags {
                 // 実体が見つかったら返却用 Set に詰め込む
                 int targetNodeSize = targetNodeList.getLength();
                 for (int i = 0; i < targetNodeSize; i++) {
+                    Node targetNode = targetNodeList.item(i);
+                    String lineNumber = String.valueOf(
+                            prologLines + getLineNumber(targetNode));
                     t.add(new Record(
                             symbol,
                             arxml.getFilePath(),
-                            String.valueOf(prologLines + getLineNumber(targetNodeList.item(i))),
-                            targetNodeList.item(i).getNodeName(),
+                            lineNumber,
+                            targetNode.getNodeName(),
                             arHierarchyPath));
                 }
-            } catch (Exception e) {
+            } catch (ParserConfigurationException
+                    |SAXException
+                    |XPathExpressionException
+                    |IOException e) {
                 throw new RuntimeException("filePath : " + arxml.getFilePath() + ".", e);
             }
         }
         return t;
     }
 
+    /**
+     * ARXML ファイルのプロローグの行数を取得する。
+     *
+     * @param 対象の ARXML ファイル
+     *
+     * @return ARXML ファイルのプロローグの行数
+     */
     private static long getPrologLineNumber(Arxml arxml)
             throws SAXException, ParserConfigurationException, IOException {
 
