@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -367,16 +368,15 @@ public class Artags {
             charset = Charset.forName("UTF-8");
         }
 
-        byte[] bytes = Files.readAllBytes(arxmlFilePath);
-        String contents = new String(bytes, charset);
-        int rootNodePosition = contents.indexOf("<AUTOSAR ");
-        String prologString = contents.substring(0, rootNodePosition);
-
+        // ファイルの先頭から "<AUTOSAR " が出現する行までの行数を数える
+        Iterator<String> lines = Files.lines(arxmlFilePath, charset).iterator();
         long prologLines = 0;
-        for (int i = 0; i < prologString.length(); i++) {
-            if (prologString.charAt(i) == '\n') {
-                prologLines++;
+        while (lines.hasNext()) {
+            String line = lines.next();
+            if (line.contains("<AUTOSAR ")) {
+                break;
             }
+            prologLines++;
         }
 
         return prologLines;
