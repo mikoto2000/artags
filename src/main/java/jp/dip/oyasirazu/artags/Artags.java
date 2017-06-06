@@ -433,7 +433,8 @@ public class Artags {
          * @return タグファイルの 1 レコードとして出力する文字列
          */
         public String buildRecordString(Path basePath) {
-            return symbol + "\t" + basePath.getParent().relativize(filePath).toString() + "\t" + searchStr + ";\"\t\t" + arHierarchyPath + " (" + type + ")\tfile:";
+            Path relativePath = basePath.toAbsolutePath().getParent().relativize(filePath.toAbsolutePath());
+            return symbol + "\t" + relativePath.toString() + "\t" + searchStr + ";\"\t\t" + arHierarchyPath + " (" + type + ")\tfile:";
         }
     }
 
