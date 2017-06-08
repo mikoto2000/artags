@@ -21,7 +21,7 @@ apply {
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-version = '1.0.0'
+version = '0.5.0'
 
 [compileJava, compileTestJava]*.options*.encoding = "UTF-8"
 javadoc {
@@ -97,7 +97,7 @@ tasks.withType(Checkstyle) {
 jar {
     manifest {
         attributes 'Implementation-Title': 'Create ARXML tags Application.'
-        attributes 'Implementation-Version': '1.0.0'
+        attributes 'Implementation-Version': '0.5.0'
         attributes "Main-Class" : "jp.dip.oyasirazu.artags.Main"
     }
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
