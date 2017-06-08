@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.IllegalArgumentException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -83,6 +84,14 @@ public class Main {
             outputFilePathStr = OUTPUT_FILE_PATH_DEFAULT;
         }
 
+        // 出力先ファイルの妥当性確認
+        Path outputFilePath = Paths.get(outputFilePathStr);
+        Path outputDirPath = outputFilePath.toAbsolutePath().getParent();
+
+        if (outputDirPath == null) {
+            throw new IllegalArgumentException("OUTPUT_FILE is invalid : " + outputFilePathStr);
+        }
+
         // アペンドモードを判定してオプション配列を生成
         StandardOpenOption[] openOptions;
         if (options.isAppend()) {
@@ -117,9 +126,8 @@ public class Main {
             }
 
             // タグレコードを出力
-            Path outputFilePath = Paths.get(outputFilePathStr);
             for (Record record : allRecords) {
-                bw.write(record.buildRecordString(outputFilePath) + "\n");
+                bw.write(record.buildRecordString(outputDirPath) + "\n");
             }
         }
     }

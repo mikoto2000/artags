@@ -427,13 +427,13 @@ public class Artags {
         /**
          * タグファイルの 1 レコードとして出力する文字列を組み立てる。
          *
-         * タグファイルに出力するパスを、 basePath からの相対パスにする。
+         * タグファイルに出力するパスを、 baseDirPath からの相対パスにする。
          *
-         * @param basePath タグファイルに出力するパスを、この basePath からの相対パスにする
+         * @param baseDirPath タグレコードとして出力するパスを、この baseDirPath からの相対パスにする
          * @return タグファイルの 1 レコードとして出力する文字列
          */
-        public String buildRecordString(Path basePath) {
-            Path relativePath = basePath.toAbsolutePath().getParent().relativize(filePath.toAbsolutePath());
+        public String buildRecordString(Path baseDirPath) {
+            Path relativePath = baseDirPath.toAbsolutePath().relativize(filePath.toAbsolutePath());
             return symbol + "\t" + relativePath.toString() + "\t" + searchStr + ";\"\t\t" + arHierarchyPath + " (" + type + ")\tfile:";
         }
     }

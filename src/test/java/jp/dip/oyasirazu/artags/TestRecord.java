@@ -42,12 +42,12 @@ public class TestRecord {
                 , "arHierarchyPath01"
         );
 
-        Path outputFilePath = Paths.get("path", "to", "output", "file", "tags");
-        String recordString01 = record01.buildRecordString(outputFilePath);
+        Path outputPath = Paths.get("path", "to", "output", "dir");
+        String recordString01 = record01.buildRecordString(outputPath);
 
-        // 'path/to/output/file' までがディレクトリで、
-        // 'tags' が出力ファイルなので、レコードに格納する相対パスとしては
-        // 'path/to/output/file/tags' から
+        // 'path/to/output/dir' ディレクトリに出力するので、
+        // レコードに格納する相対パスとしては
+        // 'path/to/output/dir' から
         // 'path/to/file/01/test.arxml' までの相対パスになる
         assertThat(recordString01, is("symbol01\t..\\..\\file\\01\\test.arxml\tsearchStr01;\"\t\tarHierarchyPath01 (type01)\tfile:"));
     }
