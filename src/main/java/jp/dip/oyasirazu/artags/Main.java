@@ -1,7 +1,9 @@
 package jp.dip.oyasirazu.artags;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,16 +17,16 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
 
+import jp.dip.oyasirazu.artags.Artags.Arxml;
+import jp.dip.oyasirazu.artags.Artags.Record;
+
+import lombok.Data;
+
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.xml.sax.SAXException;
-
-import jp.dip.oyasirazu.artags.Artags.Arxml;
-import jp.dip.oyasirazu.artags.Artags.Record;
-
-import lombok.Data;
 
 /**
  * Main
@@ -57,6 +59,12 @@ public class Main {
         // ヘルプ判定
         if (options.isHelp()) {
             printUsage(optionParser);
+            System.exit(0);
+        }
+
+        // ライセンス判定
+        if (options.isLicense()) {
+            printLicense();
             System.exit(0);
         }
 
@@ -125,6 +133,21 @@ public class Main {
         optionParser.printUsage(System.out);
     }
 
+    private static void printLicense() throws IOException {
+        // ライセンスを表示
+        try (
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(
+                    Main.class.getResourceAsStream("/LICENSE"), "UTF-8"));
+        ) {
+            String line = br.readLine();
+            while (line != null) {
+                System.out.println(line);
+                line = br.readLine();
+            }
+        }
+    }
+
     @Data
     static class Options {
 
@@ -143,7 +166,10 @@ public class Main {
         @Option(name = "-e", aliases = "--exclude", usage = "exclude path pattern.", metaVar = "ExCLUDE_PATH_PATTERN")
         private String excludePattern;
 
-        @Argument(required = true)
+        @Option(name = "--license", usage = "print license.")
+        private boolean license;
+
+        @Argument
         private List<String> targetDirectories;
     }
 }
