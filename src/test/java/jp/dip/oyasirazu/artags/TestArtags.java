@@ -130,8 +130,11 @@ public class TestArtags {
         }
     }
 
+    /**
+     * ヘッダ直後にコメントがある場合にも問題なく行数が取得できるかを確認。
+     */
     @Test
-    public void testCreateTagsString_ヘッダ直後のコメント() {
+    public void testCreateTagsString_CommentImmediatelyAfterHeader() {
         try {
             Arxml arxml1 = new Arxml(Paths.get("./src/test/resources/contents_variation/01_comments.arxml"));
             List<Arxml> avarableArxmls1 = new ArrayList<>();
