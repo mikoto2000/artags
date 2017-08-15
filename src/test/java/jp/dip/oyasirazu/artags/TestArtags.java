@@ -168,6 +168,33 @@ public class TestArtags {
         }
     }
 
+    @Test
+    public void testCreateTagsString_SameShortName() {
+        try {
+            Arxml arxml1 = new Arxml(Paths.get("./src/test/resources/same_short_name/test.arxml"));
+            List<Arxml> avarableArxmls1 = new ArrayList<>();
+            avarableArxmls1.add(arxml1);
+
+            Set<Record> records1 = Artags.createTagsString(arxml1, avarableArxmls1);
+            assertThat(records1.size(), is(2));
+
+            for (Record record : records1) {
+                if (record.getArHierarchyPath().equals("/Parent/sint8")) {
+                    assertThat(record.getSearchStr(), is("7"));
+                } else if (record.getArHierarchyPath().equals("/Parent/Child/sint8")) {
+                    assertThat(record.getSearchStr(), is("19"));
+                }
+            }
+
+        } catch (XPathExpressionException
+                | SAXException
+                | ParserConfigurationException
+                | TransformerException
+                | IOException e) {
+            fail("例外が出ちゃいましたねー : " + e.getMessage());
+        }
+    }
+
     private List<String> createStringList(String... strs) {
         List<String> strList = Arrays.asList(strs);
         return strList;

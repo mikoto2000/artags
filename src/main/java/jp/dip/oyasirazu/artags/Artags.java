@@ -347,6 +347,14 @@ public class Artags {
                 int targetNodeSize = targetNodeList.getLength();
                 for (int i = 0; i < targetNodeSize; i++) {
                     Node targetNode = targetNodeList.item(i);
+
+                    // targetNode の arHierarchyPath が
+                    // 指定された arHierarchyPath と異なる場合はスキップ
+                    // (別階層に同じ SHORT-NAME が存在する場合、両方とも引っかかってしまうため)
+                    if (!getArHierarcyPath(targetNode).equals(arHierarchyPath)) {
+                        continue;
+                    }
+
                     String lineNumber = String.valueOf(
                             prologLines + getLineNumber(targetNode));
                     t.add(new Record(
@@ -399,6 +407,30 @@ public class Artags {
         }
 
         return prologLines;
+    }
+
+    private static String getArHierarcyPath(Node node) throws XPathExpressionException {
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        XPath xpath = xPathFactory.newXPath();
+
+        String shortName = xpath.evaluate(
+                    "./SHORT-NAME/text()",
+                    node);
+
+        Node parentNode = node.getParentNode();
+        if (parentNode != null) {
+            if (shortName == "") {
+                return getArHierarcyPath(parentNode);
+            } else {
+                return getArHierarcyPath(parentNode) + "/" + shortName;
+            }
+        } else {
+            if (shortName == "") {
+                return "";
+            } else {
+                return "/" + shortName;
+            }
+        }
     }
 
     /**
