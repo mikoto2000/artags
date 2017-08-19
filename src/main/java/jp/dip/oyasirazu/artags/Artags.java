@@ -305,7 +305,7 @@ public class Artags {
                     IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse(arxmlFilePath.toString());
+        return builder.parse(arxmlFilePath.toFile());
     }
 
     /**

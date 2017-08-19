@@ -131,6 +131,44 @@ public class TestArtags {
     }
 
     /**
+     * 非 ascii 文字を含むパスが問題なく読み込めることを確認。
+     */
+    @Test
+    public void testCreateTagsString_FromNonAsciiPath() {
+        try {
+            Arxml arxml1 = new Arxml(Paths.get("./src/test/resources/非asciiパス/test.arxml"));
+            List<Arxml> avarableArxmls1 = new ArrayList<>();
+            avarableArxmls1.add(arxml1);
+
+            Set<Record> records1 = Artags.createTagsString(arxml1, avarableArxmls1);
+            assertThat(records1.size(), is(6));
+
+            for (Record record : records1) {
+                if (record.getSymbol().equals("sint8")) {
+                    assertThat(record.getSearchStr(), is("7"));
+                } else if (record.getSymbol().equals("ImplDataType")) {
+                    assertThat(record.getSearchStr(), is("20"));
+                } else if (record.getSymbol().equals("Interface")) {
+                    assertThat(record.getSearchStr(), is("36"));
+                } else if (record.getSymbol().equals("Runnable")) {
+                    assertThat(record.getSearchStr(), is("72"));
+                } else if (record.getSymbol().equals("Port")) {
+                    assertThat(record.getSearchStr(), is("55"));
+                } else if (record.getSymbol().equals("Operation")) {
+                    assertThat(record.getSearchStr(), is("40"));
+                }
+            }
+
+        } catch (XPathExpressionException
+                | SAXException
+                | ParserConfigurationException
+                | TransformerException
+                | IOException e) {
+            fail("例外が出ちゃいましたねー : " + e.getMessage());
+        }
+    }
+
+    /**
      * ヘッダ直後にコメントがある場合にも問題なく行数が取得できるかを確認。
      */
     @Test
