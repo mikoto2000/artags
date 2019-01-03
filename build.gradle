@@ -54,12 +54,12 @@ dependencies {
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'
     testCompile "org.hamcrest:hamcrest-all:1.3"
-    testCompileOnly 'org.projectlombok:lombok:1.16.4'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.16.4'
+    testCompileOnly 'org.projectlombok:lombok:1.18.4'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.4'
 
     compile 'args4j:args4j:2.0.16'
-    compileOnly 'org.projectlombok:lombok:1.16.4'
-    annotationProcessor 'org.projectlombok:lombok:1.16.4'
+    compileOnly 'org.projectlombok:lombok:1.18.4'
+    annotationProcessor 'org.projectlombok:lombok:1.18.4'
 }
 
 // Define the main class for the application
