@@ -5,13 +5,10 @@ import java.nio.file.Paths;
 
 import jp.dip.oyasirazu.artags.Artags.Record;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * TestRecord
@@ -29,7 +26,7 @@ public class TestRecord {
         );
 
         String recordString01 = record01.buildRecordString();
-        assertThat(recordString01, is("symbol01\tpath\\to\\file\\01\\test.arxml\tsearchStr01;\"\t\tarHierarchyPath01 (type01)\tfile:"));
+        assertEquals(recordString01, "symbol01\tpath\\to\\file\\01\\test.arxml\tsearchStr01;\"\t\tarHierarchyPath01 (type01)\tfile:");
     }
 
     @Test
@@ -49,13 +46,13 @@ public class TestRecord {
         // レコードに格納する相対パスとしては
         // 'path/to/output/dir' から
         // 'path/to/file/01/test.arxml' までの相対パスになる
-        assertThat(recordString01, is("symbol01\t..\\..\\file\\01\\test.arxml\tsearchStr01;\"\t\tarHierarchyPath01 (type01)\tfile:"));
+        assertEquals(recordString01, "symbol01\t..\\..\\file\\01\\test.arxml\tsearchStr01;\"\t\tarHierarchyPath01 (type01)\tfile:");
     }
-    @Before
+    @BeforeEach
     public void setup() {
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 }
