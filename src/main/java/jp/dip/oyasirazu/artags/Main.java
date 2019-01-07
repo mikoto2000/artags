@@ -121,7 +121,7 @@ public class Main {
             // arxml リストを一つずつ読み込み、タグファイルのレコードを作成する。
             Set<Record> allRecords = new HashSet<Record>();
             for (Arxml arxml : arxmls) {
-                Set<Record> tags = Artags.createTagsString(arxml, arxmls);
+                Set<Record> tags = Artags.createTagsString(arxml);
                 allRecords.addAll(tags);
             }
 

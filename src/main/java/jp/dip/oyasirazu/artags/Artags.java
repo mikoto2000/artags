@@ -9,8 +9,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -167,44 +165,42 @@ public class Artags {
 
 
     /**
-     * 指定された arxml ファイルから、参照先を設定しているノードを探す。
+     * 指定された arxml ファイルから、SHORT-NAME が設定された要素を探す。
      *
-     * @param arxml 参照先を設定しているノードを探したい arxml ファイルインスタンス
+     * @param arxml SHORT-NAME が設定された要素を探したい arxml ファイルインスタンス
      *
-     * @return 参照先を設定しているノードインスタンスのリスト
+     * @return SHORT-NAME が設定された要素のインスタンスのリスト
      */
-    private static List<Node> searchRefNodes(Arxml arxml) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
+    private static List<Node> searchShortNameContainers(Arxml arxml) throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
 
         XPathFactory xPathFactory = XPathFactory.newInstance();
         XPath xpath = xPathFactory.newXPath();
 
         // get reference node list
-        NodeList refNodeList = (NodeList)xpath.evaluate(
-                "//*[@DEST]",
+        NodeList targetNodeList = (NodeList)xpath.evaluate(
+                "//SHORT-NAME/..",
                 createDocument(arxml.getFilePath()),
                 XPathConstants.NODESET);
 
         // move NodeList to ArrayList<Node>.
-        int refNodeListSize = refNodeList.getLength();
-        ArrayList<Node> refNodes = new ArrayList<>(refNodeListSize);
-        for (int i = 0; i < refNodeListSize; i++) {
-            refNodes.add(refNodeList.item(i));
+        int targetNodeListSize = targetNodeList.getLength();
+        ArrayList<Node> targets = new ArrayList<>(targetNodeListSize);
+        for (int i = 0; i < targetNodeListSize; i++) {
+            targets.add(targetNodeList.item(i));
         }
 
-        return refNodes;
+        return targets;
     }
 
     /**
      * タグファイルのレコードを生成する。
      *
-     * @param referredArxml 解析対象の arxml インスタンス。(参照の定義をしているほう)
-     * @param avarableArxmls 実体を探す対象の arxml インスタンスのリスト
+     * @param arxml 解析対象の arxml インスタンス。
      *
      * @return 解析結果のタグファイルレコードのセット
      */
     public static Set<Record> createTagsString(
-            Arxml referredArxml,
-            List<Arxml> avarableArxmls)
+            Arxml arxml)
             throws SAXException,
                     XPathExpressionException,
                     TransformerException,
@@ -212,39 +208,43 @@ public class Artags {
                     IOException {
 
         // 参照しているノードのリストを取得する
-        List<Node> refNodes = searchRefNodes(referredArxml);
+        List<Node> targets = searchShortNameContainers(arxml);
 
         // avarableArxmls から、 refNode の実体を探す
-        Set<Record> tags = refNodes.parallelStream()
-            .map((n) -> searchNodeElementFromAvarableArxmls(n, avarableArxmls))
-            .flatMap(v -> v.stream()).collect(Collectors.toSet());
+        Set<Record> tags = targets.stream()
+            .map((n) -> nodeToRecord(arxml, n))
+            .collect(Collectors.toSet());
 
         return tags;
     }
 
-
     /**
-     * arHierarchyPath から実体のエレメントを探すための XPath 式を組み立てる。
+     * 指定されたノードからタグレコード情報を生成します。
      *
-     * @param arHierarchyPath 参照文字列
+     * @param arxml ノードが定義されている arxml ファイル
+     * @param targetNode タグレコードにするノード
      *
-     * @return XPath 式文字列
+     * @return targetNode から生成されたタグレコード
      */
-    private static String buildEntitySearchXPath(String arHierarchyPath) {
-        List<String> splitedArHierarchyPath = Arrays.asList(arHierarchyPath.split("/"));
+    private static Record nodeToRecord(Arxml arxml, Node targetNode) {
+        try {
+            String symbol = getShortName(targetNode);
+            Path filePath = arxml.getFilePath();
+            String searchStr = String.valueOf(getLineNumber(targetNode) + getPrologLineNumber(arxml));
+            String type = targetNode.getNodeName();
+            String arHierarchyPath = getArHierarcyPath(targetNode);
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("//SHORT-NAME[text()=\"");
+            Record record = new Record(
+                    symbol,
+                    filePath,
+                    searchStr,
+                    type,
+                    arHierarchyPath);
 
-        int depth = splitedArHierarchyPath.size();
-        for (int i = 1; i < depth - 1; i++) {
-            sb.append(splitedArHierarchyPath.get(i));
-            sb.append("\"]/..//SHORT-NAME[text()=\"");
+            return record;
+        } catch (XPathExpressionException|SAXException|ParserConfigurationException|IOException e) {
+            throw new RuntimeException(e);
         }
-        sb.append(splitedArHierarchyPath.get(depth - 1));
-        sb.append("\"]/..");
-
-        return sb.toString();
     }
 
     /**
@@ -309,75 +309,9 @@ public class Artags {
     }
 
     /**
-     * 指定された参照元ノードに記載されている参照先ノードを探し、
-     * ctags のレコード形式にして記録する。
-     *
-     * @param n 参照元ノード
-     * @param avarableArxmls 参照先を探す対象の ARXML ファイルリスト
-     *
-     * @return ctags のレコードを表すオブジェクトのセット
-     */
-    public static Set<Record> searchNodeElementFromAvarableArxmls(Node n,
-            List<Arxml> avarableArxmls) {
-        String arHierarchyPath = n.getTextContent();
-        String[] arHierarchyArray = arHierarchyPath.split("/");
-        String symbol = arHierarchyArray[arHierarchyArray.length - 1];
-
-        // 実体を探すための XPath 式を組み立てる
-        String entitySearchXPath = buildEntitySearchXPath(arHierarchyPath);
-
-        // 全 arxml に対して直前で組み立てた XPath 式を使って実体を取得
-        XPathFactory xPathFactory = XPathFactory.newInstance();
-        XPath xpath = xPathFactory.newXPath();
-
-        Set<Record> t = new HashSet<>();
-        for (Arxml arxml : avarableArxmls) {
-            try {
-
-                // prolog のテキストが無視されてしまい行数が特定できないので、
-                // prolog だけテキストとして読み込んで改行文字を数える。
-                long prologLines = getPrologLineNumber(arxml);
-
-                NodeList targetNodeList = (NodeList)xpath.evaluate(
-                            entitySearchXPath,
-                            createDocument(arxml.getFilePath()),
-                            XPathConstants.NODESET);
-
-                // 実体が見つかったら返却用 Set に詰め込む
-                int targetNodeSize = targetNodeList.getLength();
-                for (int i = 0; i < targetNodeSize; i++) {
-                    Node targetNode = targetNodeList.item(i);
-
-                    // targetNode の arHierarchyPath が
-                    // 指定された arHierarchyPath と異なる場合はスキップ
-                    // (別階層に同じ SHORT-NAME が存在する場合、両方とも引っかかってしまうため)
-                    if (!getArHierarcyPath(targetNode).equals(arHierarchyPath)) {
-                        continue;
-                    }
-
-                    String lineNumber = String.valueOf(
-                            prologLines + getLineNumber(targetNode));
-                    t.add(new Record(
-                            symbol,
-                            arxml.getFilePath(),
-                            lineNumber,
-                            targetNode.getNodeName(),
-                            arHierarchyPath));
-                }
-            } catch (ParserConfigurationException
-                    |SAXException
-                    |XPathExpressionException
-                    |IOException e) {
-                throw new RuntimeException("filePath : " + arxml.getFilePath() + ".", e);
-            }
-        }
-        return t;
-    }
-
-    /**
      * ARXML ファイルのプロローグの行数を取得する。
      *
-     * @param 対象の ARXML ファイル
+     * @param arxml 対象の ARXML ファイル
      *
      * @return ARXML ファイルのプロローグの行数
      */
@@ -410,12 +344,7 @@ public class Artags {
     }
 
     private static String getArHierarcyPath(Node node) throws XPathExpressionException {
-        XPathFactory xPathFactory = XPathFactory.newInstance();
-        XPath xpath = xPathFactory.newXPath();
-
-        String shortName = xpath.evaluate(
-                    "./SHORT-NAME/text()",
-                    node);
+        String shortName = getShortName(node);
 
         Node parentNode = node.getParentNode();
         if (parentNode != null) {
@@ -431,6 +360,17 @@ public class Artags {
                 return "/" + shortName;
             }
         }
+    }
+
+    private static String getShortName(Node node) throws XPathExpressionException {
+        XPathFactory xPathFactory = XPathFactory.newInstance();
+        XPath xpath = xPathFactory.newXPath();
+
+        String shortName = xpath.evaluate(
+                    "./SHORT-NAME/text()",
+                    node);
+
+        return shortName;
     }
 
     /**

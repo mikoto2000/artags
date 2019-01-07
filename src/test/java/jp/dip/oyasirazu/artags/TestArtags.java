@@ -100,22 +100,36 @@ public class TestArtags {
             List<Arxml> avarableArxmls1 = new ArrayList<>();
             avarableArxmls1.add(arxml1);
 
-            Set<Record> records1 = Artags.createTagsString(arxml1, avarableArxmls1);
-            assertEquals(records1.size(), 6);
+            Set<Record> records1 = Artags.createTagsString(arxml1);
+            assertEquals(records1.size(), 14);
 
             for (Record record : records1) {
-                if (record.getSymbol().equals("sint8")) {
+                if (record.getSymbol().equals("BaseTypes")) {
+                    assertEquals(record.getSearchStr(), "4");
+                } else if (record.getSymbol().equals("sint8")) {
                     assertEquals(record.getSearchStr(), "7");
+                } else if (record.getSymbol().equals("ImplDataTypes")) {
+                    assertEquals(record.getSearchStr(), "17");
                 } else if (record.getSymbol().equals("ImplDataType")) {
                     assertEquals(record.getSearchStr(), "20");
+                } else if (record.getSymbol().equals("SystemDescription")) {
+                    assertEquals(record.getSearchStr(), "33");
                 } else if (record.getSymbol().equals("Interface")) {
                     assertEquals(record.getSearchStr(), "36");
-                } else if (record.getSymbol().equals("Runnable")) {
-                    assertEquals(record.getSearchStr(), "72");
-                } else if (record.getSymbol().equals("Port")) {
-                    assertEquals(record.getSearchStr(), "55");
                 } else if (record.getSymbol().equals("Operation")) {
                     assertEquals(record.getSearchStr(), "40");
+                } else if (record.getSymbol().equals("angle")) {
+                    assertEquals(record.getSearchStr(), "43");
+                } else if (record.getSymbol().equals("ApplicationSwcType")) {
+                    assertEquals(record.getSearchStr(), "52");
+                } else if (record.getSymbol().equals("Port")) {
+                    assertEquals(record.getSearchStr(), "55");
+                } else if (record.getSymbol().equals("InternalBehaviorName")) {
+                    assertEquals(record.getSearchStr(), "61");
+                } else if (record.getSymbol().equals("TimingEventName")) {
+                    assertEquals(record.getSearchStr(), "64");
+                } else if (record.getSymbol().equals("Runnable")) {
+                    assertEquals(record.getSearchStr(), "72");
                 }
             }
 
@@ -138,22 +152,36 @@ public class TestArtags {
             List<Arxml> avarableArxmls1 = new ArrayList<>();
             avarableArxmls1.add(arxml1);
 
-            Set<Record> records1 = Artags.createTagsString(arxml1, avarableArxmls1);
-            assertEquals(records1.size(), 6);
+            Set<Record> records1 = Artags.createTagsString(arxml1);
+            assertEquals(records1.size(), 14);
 
             for (Record record : records1) {
-                if (record.getSymbol().equals("sint8")) {
+                if (record.getSymbol().equals("BaseTypes")) {
+                    assertEquals(record.getSearchStr(), "4");
+                } else if (record.getSymbol().equals("sint8")) {
                     assertEquals(record.getSearchStr(), "7");
+                } else if (record.getSymbol().equals("ImplDataTypes")) {
+                    assertEquals(record.getSearchStr(), "17");
                 } else if (record.getSymbol().equals("ImplDataType")) {
                     assertEquals(record.getSearchStr(), "20");
+                } else if (record.getSymbol().equals("SystemDescription")) {
+                    assertEquals(record.getSearchStr(), "33");
                 } else if (record.getSymbol().equals("Interface")) {
                     assertEquals(record.getSearchStr(), "36");
-                } else if (record.getSymbol().equals("Runnable")) {
-                    assertEquals(record.getSearchStr(), "72");
-                } else if (record.getSymbol().equals("Port")) {
-                    assertEquals(record.getSearchStr(), "55");
                 } else if (record.getSymbol().equals("Operation")) {
                     assertEquals(record.getSearchStr(), "40");
+                } else if (record.getSymbol().equals("angle")) {
+                    assertEquals(record.getSearchStr(), "43");
+                } else if (record.getSymbol().equals("ApplicationSwcType")) {
+                    assertEquals(record.getSearchStr(), "52");
+                } else if (record.getSymbol().equals("Port")) {
+                    assertEquals(record.getSearchStr(), "55");
+                } else if (record.getSymbol().equals("InternalBehaviorName")) {
+                    assertEquals(record.getSearchStr(), "61");
+                } else if (record.getSymbol().equals("TimingEventName")) {
+                    assertEquals(record.getSearchStr(), "64");
+                } else if (record.getSymbol().equals("Runnable")) {
+                    assertEquals(record.getSearchStr(), "72");
                 }
             }
 
@@ -176,22 +204,36 @@ public class TestArtags {
             List<Arxml> avarableArxmls1 = new ArrayList<>();
             avarableArxmls1.add(arxml1);
 
-            Set<Record> records1 = Artags.createTagsString(arxml1, avarableArxmls1);
-            assertEquals(records1.size(), 6);
+            Set<Record> records1 = Artags.createTagsString(arxml1);
+            assertEquals(records1.size(), 14);
 
             for (Record record : records1) {
-                if (record.getSymbol().equals("sint8")) {
+                if (record.getSymbol().equals("BaseTypes")) {
+                    assertEquals(record.getSearchStr(), "12");
+                } else if (record.getSymbol().equals("sint8")) {
                     assertEquals(record.getSearchStr(), "15");
+                } else if (record.getSymbol().equals("ImplDataTypes")) {
+                    assertEquals(record.getSearchStr(), "25");
                 } else if (record.getSymbol().equals("ImplDataType")) {
                     assertEquals(record.getSearchStr(), "28");
+                } else if (record.getSymbol().equals("SystemDescription")) {
+                    assertEquals(record.getSearchStr(), "41");
                 } else if (record.getSymbol().equals("Interface")) {
                     assertEquals(record.getSearchStr(), "44");
-                } else if (record.getSymbol().equals("Runnable")) {
-                    assertEquals(record.getSearchStr(), "80");
-                } else if (record.getSymbol().equals("Port")) {
-                    assertEquals(record.getSearchStr(), "63");
                 } else if (record.getSymbol().equals("Operation")) {
                     assertEquals(record.getSearchStr(), "48");
+                } else if (record.getSymbol().equals("angle")) {
+                    assertEquals(record.getSearchStr(), "51");
+                } else if (record.getSymbol().equals("ApplicationSwcType")) {
+                    assertEquals(record.getSearchStr(), "60");
+                } else if (record.getSymbol().equals("Port")) {
+                    assertEquals(record.getSearchStr(), "63");
+                } else if (record.getSymbol().equals("InternalBehaviorName")) {
+                    assertEquals(record.getSearchStr(), "69");
+                } else if (record.getSymbol().equals("TimingEventName")) {
+                    assertEquals(record.getSearchStr(), "72");
+                } else if (record.getSymbol().equals("Runnable")) {
+                    assertEquals(record.getSearchStr(), "80");
                 }
             }
 
@@ -211,8 +253,8 @@ public class TestArtags {
             List<Arxml> avarableArxmls1 = new ArrayList<>();
             avarableArxmls1.add(arxml1);
 
-            Set<Record> records1 = Artags.createTagsString(arxml1, avarableArxmls1);
-            assertEquals(records1.size(), 2);
+            Set<Record> records1 = Artags.createTagsString(arxml1);
+            assertEquals(records1.size(), 7);
 
             for (Record record : records1) {
                 if (record.getArHierarchyPath().equals("/Parent/sint8")) {
