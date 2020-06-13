@@ -140,6 +140,18 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.0.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs</artifactId>
+                        <version>4.0.4</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
 
@@ -165,6 +177,18 @@
                     <reportSet>
                         <reports>
                             <report>report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.0.0</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>spotbugs</report>
                         </reports>
                     </reportSet>
                 </reportSets>
