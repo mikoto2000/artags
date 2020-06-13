@@ -16,7 +16,7 @@ java -jar artags-x.x.x.jar PATH_TO_BASE_DIR -e EXCLUDE_PATTERN
 Requirements:
 -------------
 
-- java version "1.8.0_112" or later.
+- openjdk 14.0.1 2020-04-14.
 
 
 Feature :
@@ -31,7 +31,7 @@ Feature :
 License:
 --------
 
-Copyright (C) 2017 mikoto2000
+Copyright (C) 2020 mikoto2000
 
 This software is released under the MIT License, see LICENSE
 
