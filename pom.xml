@@ -2,6 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
+<scm>
+    <url>https://github.com/mikoto2000/artags</url>
+    <connection>scm:git:git@github.com:mikoto2000/artags.git</connection>
+</scm>
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>jp.dip.oyasirazu.artags</groupId>
@@ -137,6 +142,10 @@
                         <goals>
                             <goal>check</goal>
                         </goals>
+                        <configuration>
+                            <rules>
+                            </rules>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -151,6 +160,21 @@
                         <version>4.0.4</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.0.0-M1</version>
+                <configuration>
+                    <pushChanges>false</pushChanges>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -192,6 +216,11 @@
                         </reports>
                     </reportSet>
                 </reportSets>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.13.0</version>
             </plugin>
         </plugins>
     </reporting>
