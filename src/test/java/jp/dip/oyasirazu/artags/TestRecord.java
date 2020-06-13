@@ -26,7 +26,8 @@ public class TestRecord {
         );
 
         String recordString01 = record01.buildRecordString();
-        assertEquals(recordString01, "symbol01\tpath\\to\\file\\01\\test.arxml\tsearchStr01;\"\t\tarHierarchyPath01 (type01)\tfile:");
+        Path filePath = Paths.get("path/to/file/01/test.arxml");
+        assertEquals(recordString01, "symbol01\t" + filePath.toString() + "\tsearchStr01;\"\t\tarHierarchyPath01 (type01)\tfile:");
     }
 
     @Test
@@ -46,7 +47,8 @@ public class TestRecord {
         // レコードに格納する相対パスとしては
         // 'path/to/output/dir' から
         // 'path/to/file/01/test.arxml' までの相対パスになる
-        assertEquals(recordString01, "symbol01\t..\\..\\file\\01\\test.arxml\tsearchStr01;\"\t\tarHierarchyPath01 (type01)\tfile:");
+        Path filePath = Paths.get("../../file/01/test.arxml");
+        assertEquals(recordString01, "symbol01\t" + filePath + "\tsearchStr01;\"\t\tarHierarchyPath01 (type01)\tfile:");
     }
     @BeforeEach
     public void setup() {
