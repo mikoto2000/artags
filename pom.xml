@@ -4,14 +4,14 @@
 <scm>
     <url>https://github.com/mikoto2000/artags</url>
     <connection>scm:git:git@github.com:mikoto2000/artags.git</connection>
-  <tag>v0.5.3</tag>
+  <tag>HEAD</tag>
   </scm>
 
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>jp.dip.oyasirazu.artags</groupId>
     <artifactId>artags</artifactId>
-    <version>0.5.3</version>
+    <version>0.5.4-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
